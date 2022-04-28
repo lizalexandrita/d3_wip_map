@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
-<svg id="my_dataviz"></svg>
+<svg id="chart"></svg>
 <script type="text/javascript">
     // Create data points
     var map_data = [
-      {name: "Corsica" , lon:  9.083, lat: 42.149, pie_size: 34, dummy:105,pie_data: "100-020-00-029"}, //
-      {name: "Nice"    , lon:  7.260, lat: 43.710, pie_size: 14, dummy:100,pie_data: "120-020-00-029"}, //
-      {name: "Paris"   , lon:  2.349, lat: 48.864, pie_size: 87, dummy:110,pie_data: "130-000-10-029"}, //
-      {name: "Hossegor", lon: -1.397, lat: 43.664, pie_size: 41, dummy:150,pie_data: "100-020-00-029"}, //
-      {name: "Lille"   , lon:  3.075, lat: 50.640, pie_size: 78, dummy:100,pie_data: "150-020-00-029"}, //
-      {name: "Morlaix" , lon: -3.830, lat: 58.000, pie_size: 12, dummy:130,pie_data: "100-050-60-029"}  //
+      {name: "Corsica" , lon:  9.083, lat: 42.149, pie_size: 34, dummy:105,pie_data: "100,020,00,029"}, //
+      {name: "Nice"    , lon:  7.260, lat: 43.710, pie_size: 14, dummy:100,pie_data: "120,020,00,029"}, //
+      {name: "Paris"   , lon:  2.349, lat: 48.864, pie_size: 87, dummy:110,pie_data: "130,000,10,029"}, //
+      {name: "Hossegor", lon: -1.397, lat: 43.664, pie_size: 41, dummy:150,pie_data: "100,020,00,029"}, //
+      {name: "Lille"   , lon:  3.075, lat: 50.640, pie_size: 78, dummy:100,pie_data: "150,020,00,029"}, //
+      {name: "Morlaix" , lon: -3.830, lat: 58.000, pie_size: 12, dummy:130,pie_data: "100,050,60,029"}  //
     ];
 
     // Set svg variables
@@ -47,7 +47,7 @@
     var tp_line_spacing = 15;
 
     // Building svg and zooming behaviour
-    var svg = d3.select("svg")
+    var svg = d3.select("#chart")
         .attr("position", "absolute")
         .attr("width", width)
         .attr("height", height)
@@ -62,8 +62,7 @@
             // zoom map
             svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
         }))
-        .append("g")
-        //.attr("transform", "translate(-165, 0)");
+        .append("g");
 
 
     // The projection and path
@@ -115,9 +114,9 @@
                 .value(function(d){ return d; });
 
         var draw_pie = function(d) {
-            var p =  pie(d.pie_data.split(['-'])); // callback pie() to pass pie_data from dataset
+            var p =  pie(d.pie_data.split([','])); // callback pie() to pass pie_data from dataset
             // creates properties for each split line with global data to use on pie chart size and tooltips
-            for (i of p) {
+            for (i in p) {
                 i.pie_size = d.pie_size;
                 i.name = d.name;
             }
@@ -174,7 +173,7 @@
         var mouseover = function(d) {
             tooltip.attr("visibility","hidden")
             d3.select("#tooltip_" + d.name).attr("visibility","visible")
-            d3.select("#pie_" + d.name).attr("visibility","hidden"))
+            //d3.select("#pie_" + d.name).attr("visibility","hidden") // testing selection of individual pies to bring them up later
             console.log(d.name)
 
 
