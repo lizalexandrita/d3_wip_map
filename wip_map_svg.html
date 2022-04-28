@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+<svg id="my_dataviz"></svg>
+<script type="text/javascript">
+    // Create data points
+    var map_data = [
+      {name: "Corsica" , lon:  9.083, lat: 42.149, pie_size: 34, dummy:105,pie_data: "100-020-00-029"}, //
+      {name: "Nice"    , lon:  7.260, lat: 43.710, pie_size: 14, dummy:100,pie_data: "120-020-00-029"}, //
+      {name: "Paris"   , lon:  2.349, lat: 48.864, pie_size: 87, dummy:110,pie_data: "130-000-10-029"}, //
+      {name: "Hossegor", lon: -1.397, lat: 43.664, pie_size: 41, dummy:150,pie_data: "100-020-00-029"}, //
+      {name: "Lille"   , lon:  3.075, lat: 50.640, pie_size: 78, dummy:100,pie_data: "150-020-00-029"}, //
+      {name: "Morlaix" , lon: -3.830, lat: 58.000, pie_size: 12, dummy:130,pie_data: "100-050-60-029"}  //
+    ];
+
+    // Set svg variables
+    var width = 635;
+    var height = 360;
+
+    // Set map variables
+    var proj_scale = 100;
+    var map_fill = "#b8b8b8";
+    var stroke = "#000";
+    var stroke_opacity = 0.3;
+    var stroke_width = 1;
+
+    // I was going to centralize map on actual data points
+    //var lat = d3.median(map_data,function(d){ return +d.lat; });
+    //var lon = d3.median(map_data,function(d){ return +d.lon; });
+
+    // Set a scale for bubble size
+    var min_bsize = 0.5;
+    var max_bsize = 5;
+    var size = d3.scale.linear()
+      .domain(d3.extent(map_data,function (d) { return d.pie_size;}))
+      .range([ min_bsize, max_bsize]); //TODO: make range of size in pixel customizable in a slider
+
+    // Set a scale for pie color
+    var pie_color = d3.scale.category10(); //TODO: make color scale customizable
+
+    // Set tooltip variables
+    var tp_width = 120;
+    var tp_height = 80;
+    var tp_rect_fill = "#080808";
+    var tp_rect_opacity = "0.8";
+    var tp_text_fill = "#fff";
+    var tp_left_margin = 5;
+    var tp_line_spacing = 15;
+
+    // Building svg and zooming behaviour
+    var svg = d3.select("svg")
+        .attr("position", "absolute")
+        .attr("width", width)
+        .attr("height", height)
+        .call(d3.behavior.zoom().on("zoom", function () {
+            // unzoom map elements
+            var gtt = d3.selectAll("g.tooltip");
+                gtt.selectAll("text").attr("transform", "scale(" + 1/d3.event.scale + ")");
+                gtt.selectAll("rect").attr("transform", "scale(" + 1/d3.event.scale + ")");
+
+            g1.selectAll("path").attr("stroke-width", stroke_width/d3.event.scale);
+
+            // zoom map
+            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+        }))
+        .append("g")
+        //.attr("transform", "translate(-165, 0)");
+
+
+    // The projection and path
+    var projection = d3.geo.mercator()
+        .scale(proj_scale) //TODO: make scale customizable
+        .translate([ width/2, height/2 ]);
+
+    var path = d3.geo.path()
+        .projection(projection);
+
+    // Create groups of elements
+    var g1 = svg // background to draw map
+        .append("g");
+    var g2 = svg // pie charts
+        .append("g");
+    var g3 = svg // tooltips
+        .append("g");
+
+    // Load external data and boot
+    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson", function(data){
+
+        // Draw the map on the background
+        g1.selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
+            .attr("fill", map_fill) //TODO: make fill customizable
+            .attr("d", path)
+            .attr("stroke", stroke) //TODO: make stroke customizable
+            .attr("stroke-width", stroke_width) //TODO: make stroke customizable
+            .attr("stroke-opacity", stroke_opacity); //TODO: make opacity customizable
+
+        // Draw the pie charts on the pie chart elements
+        var points = g2.selectAll("g") // select all groups here because they always have to be drawn
+            .data(map_data)
+            .enter()
+            .append("g")
+            .attr("id",function (d) { return "pie_" + d.name;})
+            .attr("transform",function(d) { return "translate("+projection([d.lon+size(+d.pie_size)/proj_scale,d.lat-size(+d.pie_size)/proj_scale])+")" }) //instead of using x,y
+            .attr("class","pies");
+
+        //points.append("text") // TODO: make labels a customizable option to activate or deactivate
+        //	.attr("y", -size - 5)
+        //	.text(function(d) { return d.label })
+        //	.style('text-anchor','middle');
+
+        var pie = d3.layout.pie() // creates a pie chart layout to be filled with data of each sector
+                .sort(null)
+                .value(function(d){ return d; });
+
+        var draw_pie = function(d) {
+            var p =  pie(d.pie_data.split(['-'])); // callback pie() to pass pie_data from dataset
+            // creates properties for each split line with global data to use on pie chart size and tooltips
+            for (i of p) {
+                i.pie_size = d.pie_size;
+                i.name = d.name;
+            }
+            return p;
+        };
+
+        // Actually draws pies using function draw_pie
+        var pies = points.selectAll(".pies")
+            .data(draw_pie)
+            .enter()
+            .append('g')
+            .attr('class','arc');
+
+        // Draw sectors for each pie
+        var arc = d3.svg.arc()
+                .outerRadius(function(d){ return size(+d.pie_size); }) // reason why we needed a property
+                .innerRadius(0); //TODO: make innerRadius customizable to create donuts
+
+        // Create a tooltip
+        var tooltip = g3.selectAll("g")
+            .data(map_data)
+            .enter()
+            .append("g")
+            .attr("id",function (d) { return "tooltip_" + d.name;})
+            .attr("transform",function(d) {
+                return "translate("+projection([d.lon+size(+d.pie_size)/proj_scale,d.lat-size(+d.pie_size)/proj_scale])+")"
+            }) // instead of using x,y
+            .attr("class","tooltip")
+            .attr("visibility","hidden");
+
+        tooltip // TODO: make tooltip attributes customizable
+            .append("rect")
+            .attr("width", tp_width)
+            .attr("height", tp_height)
+            .attr("fill", tp_rect_fill)
+            .attr("fill-opacity", ".8")
+            .attr("dominant-baseline","central");
+
+        tooltip
+            .append("text")
+            .text(function (d) { return d.name; })
+            .attr("fill", "#fff")
+            .attr("x", tp_left_margin)
+            .attr("dy", tp_height/2 - tp_line_spacing/2)
+            .attr("dominant-baseline","central")
+            .append("tspan")
+            .text(function (d) { return "pie_size: " + d.pie_size; })
+            .attr("fill", tp_text_fill)
+            .attr("x", tp_left_margin)
+            .attr("dy", tp_line_spacing);
+
+
+        // Functions that change the tooltip when user hover or leave a pie chart
+        var mouseover = function(d) {
+            tooltip.attr("visibility","hidden")
+            d3.select("#tooltip_" + d.name).attr("visibility","visible")
+            d3.select("#pie_" + d.name).attr("visibility","hidden"))
+            console.log(d.name)
+
+
+        };
+        var mouseleave = function(d) {
+            d3.select("#tooltip_" + d.name).attr("visibility","hidden")
+        };
+
+        pies.append("path")
+            .attr('d',arc)
+            .attr("fill",function(d,i){
+                return pie_color(i);
+            })
+            .on("mouseover", mouseover)
+            .on("mouseleave", mouseleave);
+    })
+</script>
