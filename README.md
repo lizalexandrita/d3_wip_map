@@ -13,3 +13,11 @@ Unfortunately the following limitations are valid for this visual:
 ## Obs.
 * If you want to make adaptations to a Power BI D3.js custom visual right off the bat, please note that you can't change styles on css or any of the html properties, you can only change svg attributes
 * You're welcome to contribute, the code is fully commented for beginners in front-end (like myself)
+
+## Sources
+* [D3.js v3 API Reference](https://github.com/d3/d3-3.x-api-reference/blob/master/API-Reference.md)
+* [SVG Documentation](https://developer.mozilla.org/en-US/docs/Web/SVG) - to understand and change attributes of styles, etc
+* [Power BI D3.js Visual Documentation](https://azurebi-docs.jppp.org/powerbi-visuals/d3js.html?tabs=docs%2Cdocs-open)
+* [D3 Gallery](https://d3-graph-gallery.com/index.html) - it's in d3 v4, so to actually use it, it must be adapted
+* [Observable](https://observablehq.com/@d3) - Some code must be adapted to work in v3
+
