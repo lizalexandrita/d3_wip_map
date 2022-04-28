@@ -21,3 +21,5 @@ Unfortunately the following limitations are valid for this visual:
 * [D3 Gallery](https://d3-graph-gallery.com/index.html) - it's in d3 v4, so to actually use it, it must be adapted
 * [Observable](https://observablehq.com/@d3) - Some code must be adapted to work in v3
 
+## Next Steps
+[Add find behaviour in pie charts](https://observablehq.com/@d3)
